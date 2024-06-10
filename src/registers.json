@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Chauffage 3ème étage bâtiment A",
+    "topic": "ILEDEFRANCE/VALDOISE/BEAUMONT/BAT_A/3EMEETAGE",
+    "unit": "°C",
+    "value": 18
+  },
+  {
+    "name": "Climatisation chambre 101 bâtiment B",
+    "topic": "MAINEETLOIRE/MAINEETLOIRE/ANGERS/BAT_B/CHAMBRE101",
+    "unit": "°C",
+    "value": 12
+  },
+  {
+    "name": "Climatisation chambre 102 bâtiment B",
+    "topic": "MAINEETLOIRE/MAINEETLOIRE/ANGERS/BAT_B/CHAMBRE102",
+    "unit": "°C",
+    "value": 12
+  },
+  {
+    "name": "Climatisation chambre 103 bâtiment B",
+    "topic": "MAINEETLOIRE/MAINEETLOIRE/ANGERS/BAT_B/CHAMBRE103",
+    "unit": "°C",
+    "value": 13
+  },
+  {
+    "name": "Chauffage bureau 22",
+    "topic": "MAINEETLOIRE/MAINEETLOIRE/CHOLET/BAT_C/BUREAU22",
+    "unit": "°C",
+    "value": 19
+  }
+]
