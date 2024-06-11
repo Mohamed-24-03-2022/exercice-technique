@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { IconType } from 'react-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Tree } from 'primereact/tree';
@@ -10,8 +11,7 @@ import { BsFillBuildingsFill } from 'react-icons/bs';
 import { TbTemperatureSnow, TbTemperatureSun } from 'react-icons/tb';
 import { SiLocal } from 'react-icons/si';
 
-import registersData from './registers.json';
-import { IconType } from 'react-icons';
+import registersSample from './registers.json';
 
 type Id = {
   id: string;
@@ -36,21 +36,15 @@ type TreeNode = {
   expandedIcon: IconType;
   collapsedIcon: IconType;
   data: Id;
-  children?: TreeNode[];
+  children: TreeNode[];
   temp?: Temp;
 };
-
-// type structuredRegister = {
-//   region: string;
-//   department: string;
-//   city: string;
-//   building: string;
-//   zone: string;
-//   electronicDevice: string;
-//   tempValue: number;
-//   tempUnit: string;
-// };
-
+type Register = {
+  topic: string;
+  name: string;
+  value: number;
+  unit: string;
+};
 // const treeModel = [
 //   {
 //     label: 'Parc',
@@ -177,76 +171,84 @@ type TreeNode = {
 //   },
 // ];
 
-// const removeDuplicates = (list: string[]) =>
-//   list.filter((item: string, index: number) => list.indexOf(item) === index);
-
 function App() {
-  // const structuredRegisterData: structuredRegister[] = [];
-  // structuredRegisterData.push({
-  //   region,
-  //   department,
-  //   city,
-  //   building,
-  //   zone,
-  //   electronicDevice,
-  //   tempValue,
-  //   tempUnit,
-  // });
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [registersData, setRegistersData] = useState<Register[]>([]);
 
-  const parc: Parc[] = [];
-  registersData.forEach((register) => {
-    const [region, department, city, buildingName, zoneName]: string[] =
-      register.topic.split('/');
-    const electronicDevice: string = register.name.split(' ')[0];
-    const tempValue: number = register.value;
-    const tempUnit: string = register.unit;
+  useEffect(() => {
+    // Fetching data from the server
+    // fetch('http://localhost:8000/registers', { mode: 'cors' })
+    //   .then((response: Response) => {
+    //     response.json().then((data: Register[]) => {
+    //       setRegistersData(data);
+    //     });
+    //   })
+    //   .catch((error: Error) => {
+    //     console.error('Error fetching register data:', error);
+    //   });
 
-    const buildingIndex = parc.findIndex(
-      (item) => item.buildingName === buildingName
-    );
+    setRegistersData(registersSample);
+  }, []);
 
-    if (buildingIndex !== -1) {
-      const zoneIndex = parc[buildingIndex].buildingZones.findIndex(
-        (item) => item.zoneName === zoneName
+  useEffect(() => {
+    // if (!registersData.length) return;
+
+    const parc: Parc[] = [];
+
+    // Data proccessing
+    registersData.forEach((register) => {
+      const [region, department, city, buildingName, zoneName]: string[] =
+        register.topic.split('/');
+      const electronicDevice: string = register.name.split(' ')[0];
+      const tempValue: number = register.value;
+      const tempUnit: string = register.unit;
+
+      const buildingIndex = parc.findIndex(
+        (item) => item.buildingName === buildingName
       );
-      if (zoneIndex !== -1) {
-        parc[buildingIndex].buildingZones[zoneIndex].electronicDevices.push(
-          electronicDevice
+
+      if (buildingIndex !== -1) {
+        const zoneIndex = parc[buildingIndex].buildingZones.findIndex(
+          (item) => item.zoneName === zoneName
         );
-      } else {
-        parc[buildingIndex].buildingZones.push({
-          zoneName,
-          electronicDevices: [electronicDevice],
-          tempValue,
-          tempUnit,
-        });
-      }
-    } else {
-      parc.push({
-        buildingName,
-        buildingZones: [
-          {
+        if (zoneIndex !== -1) {
+          parc[buildingIndex].buildingZones[zoneIndex].electronicDevices.push(
+            electronicDevice
+          );
+        } else {
+          parc[buildingIndex].buildingZones.push({
             zoneName,
             electronicDevices: [electronicDevice],
             tempValue,
             tempUnit,
-          },
-        ],
-      });
-    }
-  });
+          });
+        }
+      } else {
+        parc.push({
+          buildingName,
+          buildingZones: [
+            {
+              zoneName,
+              electronicDevices: [electronicDevice],
+              tempValue,
+              tempUnit,
+            },
+          ],
+        });
+      }
+    });
 
-  const buildTree = (parc: Parc[]): TreeNode[] => {
-    const root: TreeNode = {
-      label: 'Parc',
-      expandedIcon: BsFillBuildingsFill,
-      collapsedIcon: BsFillBuildingsFill,
-      data: { id: uuidv4() },
-      children: [],
-    };
+    // building the tree (following primeReact pattern)
+    const buildTree = (parc: Parc[]): TreeNode[] => {
+      const root: TreeNode = {
+        label: 'Parc',
+        expandedIcon: BsFillBuildingsFill,
+        collapsedIcon: BsFillBuildingsFill,
+        data: { id: uuidv4() },
+        children: [],
+      };
 
-    parc.forEach((building) => {
-      if (root.children) {
+      parc.forEach((building) => {
         root.children.push({
           label: building.buildingName,
           expandedIcon: FaBuilding,
@@ -266,6 +268,7 @@ function App() {
                   collapsedIcon:
                     zone.tempValue > 15 ? TbTemperatureSun : TbTemperatureSnow,
                   data: { id: uuidv4() },
+                  children: [],
                   temp: {
                     unit: zone.tempUnit,
                     value: zone.tempValue,
@@ -275,18 +278,34 @@ function App() {
             };
           }),
         });
-      }
-    });
+      });
 
-    return [root];
-  };
+      // function getThirdLevelChild(zone: BuildingZones) {
+      //   return zone.electronicDevices.map((device) => {
+      //     return {
+      //       label: `${device} ${zone.tempValue}${zone.tempUnit}`,
+      //       expandedIcon:
+      //         zone.tempValue > 15 ? TbTemperatureSun : TbTemperatureSnow,
+      //       collapsedIcon:
+      //         zone.tempValue > 15 ? TbTemperatureSun : TbTemperatureSnow,
+      //       data: { id: uuidv4() },
+      //       temp: {
+      //         unit: zone.tempUnit,
+      //         value: zone.tempValue,
+      //       },
+      //     };
+      //   });
+      // }
 
-  console.log('root', buildTree(parc));
-  console.log('parc', parc);
+      return [root];
+    };
+
+    setTree(buildTree(parc));
+  }, [registersData]);
 
   return (
     <>
-      <Tree value={buildTree(parc)} className="w-full md:w-30rem" />{' '}
+      <Tree value={tree} className="w-full md:w-30rem" />{' '}
     </>
   );
 }
